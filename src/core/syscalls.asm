@@ -30,12 +30,12 @@ SVCALL_printString:
     mov r1, MMIO_START
 
 .printLoop:
-    ld r2, [r1, rCHAR]
+    ld r2, [r0]
     cmpi/eq r2, #0 // If the char is a null terminator, stop printing
     bt .SVCALL_printString_exit
 
     st r2, [r1, rCHAR] // Print a character
-    addi r2, r2, #1
+    addi r0, r0, #1
     bra .printLoop
 
 .SVCALL_printString_exit:
