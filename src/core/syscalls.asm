@@ -1,9 +1,9 @@
 include "common/hardware.inc"
 
 ; Supervisor calls are laid in the ROM starting at 0x2000.
-; Each supervisor call is 128 (0x80) bytes long
+; Each supervisor call is 512 (0x200) bytes long
 ; So SVCALL #0 would be at 0x2000
-; SVCALL #1 would be at 0x2080, etc
+; SVCALL #1 would be at 0x2200, etc
 equ SVCALL_TABLE_START, 0x2000
 
 section "supervisor call handler" [300h]
@@ -13,7 +13,7 @@ supervisorCallHandler:
 
     mfrc r14
     andi r14, r14, FFh ; Fetch the supervisor call comment from the control register
-    lsr r14, r14, 7 ; Multiply the comment by 0x80 to find the address of the fired SVCALL
+    lsr r14, r14, 9 ; Multiply the comment by 0x200 to find the address of the fired SVCALL
     addi r14, r14, SVCALL_TABLE_START
     rcall r14, 0
 

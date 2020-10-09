@@ -30,11 +30,12 @@ section "exception vector" [0h]
 section "boot sequence" [1000h]
 
 bootSequence:
+    mov r1, #0
+    mov r2, #0
     mov r15, RAM_START ; init the SP
 
 .greetUser:
     mov r0, .helloMessage    
-    mov r1, MMIO_START
     svcall printString
 
 // TODO
