@@ -5,8 +5,8 @@ include "syscalls.asm"
 ; exception vector (Every fault event, including SVCalls, reset, etc, goes through this vector)
 ; depending on the event type, the exception vector jumps to one of these vectors:
 
-; supervisorCallHandler: 300h
-; bootSequence: 1000h
+; supervisor_call_handler: 300h
+; boot_sequence: 1000h
 
 section "exception vector" [0h]
 
@@ -18,29 +18,38 @@ section "exception vector" [0h]
     lsr r14, r14, #8
 
     cmpi/eq r14, FAULT_SVCALL // If FAULT == 14, call the SVCALL handler
-    ct supervisorCallHandler
+    ct supervisor_call_handler
 
     cmpi/eq r14, FAULT_RESET
-    bt bootSequence // If FAULT == 15 (state of FAULT on boot), jump to the reset sequence
+    bt boot_sequence // If FAULT == 15 (state of FAULT on boot), jump to the reset sequence
 
     stop // If FAULT is none of these values, this means we've stumbled upon an exception I haven't implemented. If so, STOP.
 
 
-// POST code
+; POST code
 section "boot sequence" [1000h]
 
-bootSequence:
+boot_sequence:
     mov r1, #0
     mov r2, #0
-    mov r15, RAM_START ; init the SP
+    mov r15, #10007FFFh ; init the SP. TODO: Make this depend on the amount of RAM slotted
 
-.greetUser:
-    mov r0, .helloMessage    
-    svcall printString
-
-// TODO
 .POST:
-    stop
+    svcall get_RAM_amount_KB
+    cmp/lo r0, #32 ; Check if system has less than 32 KiB of RAM. If so, crash
+    bt not_enough_ram
+    stop ; TODO: Add more tests
 
-.helloMessage:
-    db "This is sir Michel Rodrique, speaking to you from the white house.\n", 0
+.greet_user:
+    mov r0, .hello_message    
+    svcall print_string
+
+.not_enough_ram:
+    mov r0, .not_enough_ram_message
+    svcall fatal_error
+
+.hello_message:
+    db "This is sir Michel Rodrique, speaking to you from the white house.\nI'll shit in your face\n", 0
+
+.not_enough_ram_message:
+    db "Bruh you don't even have 32KB of RAM installed"
