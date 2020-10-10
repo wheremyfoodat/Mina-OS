@@ -1,10 +1,12 @@
 include "common/hardware.inc"
 include "syscalls.asm"
+include "faults.asm"
 
 ; Addresses of important vectors:
 ; exception vector (Every fault event, including SVCalls, reset, etc, goes through this vector)
 ; depending on the event type, the exception vector jumps to one of these vectors:
 
+; SIGNAL_ILLEGAL: 200h
 ; supervisor_call_handler: 300h
 ; boot_sequence: 1000h
 
@@ -12,18 +14,26 @@ section "exception vector" [0h]
 
 .handleException:
 
-    // Load FAULT into r14
+    ; Load FAULT into r14
     mfrc r14
     andi r14, r14, #F00h
     lsr r14, r14, #8
 
-    cmpi/eq r14, FAULT_SVCALL // If FAULT == 14, call the SVCALL handler
+    cmpi/eq r14, FAULT_SVCALL ; If FAULT == 14, call the SVCALL handler
     ct supervisor_call_handler
+    bt .exceptionVectorExit
 
     cmpi/eq r14, FAULT_RESET
-    bt boot_sequence // If FAULT == 15 (state of FAULT on boot), jump to the reset sequence
+    bt boot_sequence ; If FAULT == 15 (state of FAULT on boot), jump to the reset sequence
 
-    stop // If FAULT is none of these values, this means we've stumbled upon an exception I haven't implemented. If so, STOP.
+    cmpi/eq r14, FAULT_UNDEFINED ; If FAULT == 8, jump to the SIGILL handler
+    bt SIGNAL_ILLEGAL
+
+    stop ; If FAULT is none of these values, this means we've stumbled upon an exception I haven't implemented. If so, STOP.
+
+.exceptionVectorExit:x
+    mov mcr, omcr ; This instruction's missing from the standard?
+    ret
 
 
 ; POST code
@@ -31,7 +41,6 @@ section "boot sequence" [1000h]
 
 boot_sequence:
     mov r0, #0
-    mov r1, MMIO_START
     mov r2, #0
     mov r15, #10008000h ; init the SP. TODO: Make this depend on the amount of RAM slotted
     svcall set_screen_mode ; Set screen mode to the CLI-based mode for POST
@@ -49,6 +58,10 @@ boot_sequence:
 
 .jumpToProgram:
     ; add handling for if there's no program diskette inserted
+    mfrc r0            ; \
+    nandi r0, #30000h  ;   switch from supervisor to user mode
+    mtoc r0            ; /
+
     mov r0, PROGRAM_MEM_START
     rbra r0, #0
 
