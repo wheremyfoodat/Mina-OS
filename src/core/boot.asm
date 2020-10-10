@@ -26,13 +26,17 @@ section "exception vector" [0h]
     cmpi/eq r14, FAULT_RESET
     bt boot_sequence ; If FAULT == 15 (state of FAULT on boot), jump to the reset sequence
 
-    cmpi/eq r14, FAULT_UNDEFINED ; If FAULT == 8, jump to the SIGILL handler
+    cmpi/eq r14, FAULT_INVALID_STATE ; If FAULT == 4, throw a SIGILL
     bt SIGNAL_ILLEGAL
+
+    cmpi/eq r14, FAULT_UNDEFINED ; If FAULT == 8, throw a SIGILL
+    bt SIGNAL_ILLEGAL
+
 
     stop ; If FAULT is none of these values, this means we've stumbled upon an exception I haven't implemented. If so, STOP.
 
-.exceptionVectorExit:x
-    mov mcr, omcr ; This instruction's missing from the standard?
+.exceptionVectorExit:
+    switch ; move OMCR into MCR
     ret
 
 
@@ -47,7 +51,7 @@ boot_sequence:
 
 .POST:
     svcall get_RAM_amount_KB
-    cmp/lo r0, #32 ; Check if system has less than 32 KiB of RAM. If so, crash
+    cmp/lo r0, #64 ; Check if system has less than 64 KiB of RAM. If so, crash
     bt not_enough_ram
     stop ; TODO: Add more tests
 
@@ -58,6 +62,7 @@ boot_sequence:
 
 .jumpToProgram:
     ; add handling for if there's no program diskette inserted
+    clrt               ; Clear the T bit, in case it screws up the user program
     mfrc r0            ; \
     nandi r0, #30000h  ;   switch from supervisor to user mode
     mtoc r0            ; /
@@ -74,4 +79,4 @@ boot_sequence:
     db "This is sir Michel Rodrique, speaking to you from the white house.\nI'll shit in your face\n", 0
 
 .not_enough_ram_message:
-    db "Bruh you don't even have 32KB of RAM installed"
+    db "Bruh you don't even have 64KB of RAM installed"

@@ -1,19 +1,27 @@
-;; CAUSE values
-; Cause value after an SVCALL event
-equ FAULT_SVCALL, 14
-
-; Cause value on RESET
-equ FAULT_RESET, 15
-
 ;; Memory addr constants
-; Start of RAM
-equ RAM_START, 10000000h
+; 32KB of RAM reserved for use exclusively by the OS, in supervisor mode
+; Accessing it in user mode should raise a Privilege Mismatch exception
+equ OS_RAM_START, 10000000h
+equ OS_RAM_END, 10007FFFh
 
-; Start of program memory
+; RAM for user mode processes
+; Minimum size: 32KB
+; Maximum size: 256MB
+; Accessing unslotted RAM should raise a (tfw there's no memory access fault events) Privilege Mismatch fault event
+; Programs should make sure the machine has enough RAM before running, and if they try to use too much extra RAM, boo-hoo
+; This will change when we finally get an MMU
+equ USER_RAM_START, 20000000h
+
+
+; Program memory
 equ PROGRAM_MEM_START, 80000000h
+equ PROGRAM_MEM_END, EFFFFFFFh
 
-; Start of the range of memory that the OS uses to communicate with hardware
+; Range of memory that the OS uses to communicate with hardware (also  called high page)
+; Accessing these outside of supervisor mode WILL raise a Fault Event.
+; ALL MMIO accesses in user mode should be done via syscalls
 equ MMIO_START, FFFFFF00h
+equ MMIO_END, FFFFFFFFh
 
 ;; MMIO constants
 
@@ -37,7 +45,7 @@ equ rCHAR, 4h
 equ rCLS, 5h
 
 ; RAM amount register (in bytes) (32-bit) (R) (MUST BE A POWER OF 2 (For example, 0x10000 is a valid value, but 0x300 isn't))
-; Minimum amount: 32KB
+; Minimum amount: 64KB
 ; maximum amount: 256MB
 equ rRAM_AMOUNT, 10h
 
