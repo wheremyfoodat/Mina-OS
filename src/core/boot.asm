@@ -30,9 +30,11 @@ section "exception vector" [0h]
 section "boot sequence" [1000h]
 
 boot_sequence:
-    mov r1, #0
+    mov r0, #0
+    mov r1, MMIO_START
     mov r2, #0
     mov r15, #10008000h ; init the SP. TODO: Make this depend on the amount of RAM slotted
+    svcall set_screen_mode ; Set screen mode to the CLI-based mode for POST
 
 .POST:
     svcall get_RAM_amount_KB

@@ -16,14 +16,25 @@ equ PROGRAM_MEM_START, 80000000h
 equ MMIO_START, FFFFFF00h
 
 ;; MMIO constants
+
+; Monitor control register (32-bit) (R/W)
+; bits 0-3: Display mode 
+    ; Display modes: 
+    ; DISP_MODE_0: CLI-based mode. All visual output is done by outputting characters to rCHAR, and clearing the screen is done by rCLS
+    ; DISP_MODE_1: Bitmap-based mode. Pixels are stored in VRAM as RGBA8888 values in VRAM (32bpp). rCHAR/rCLS writes are ignored
+    ; DISP_MODE_2: Bitmap-based mode. Pixels are stored in VRAM as palette indices (8bpp). Palettes are stored in PRAM as RGBA8888 values. rCHAR/rCLS writes are ignored
+    ; Other modes: RFU
+; bits 4-31: RFU
+equ rMONITOR_CNT, 0h
+
 ; Terminal output register (8-bit) (W)
-; Characters written to rCHAR are outputted to the terminal
-equ rCHAR, 0h
+; Characters written to rCHAR are outputted to the terminal when the machine is in a CLI-based mode
+equ rCHAR, 4h
 
 ; Clear Screen register (8-bit) (W)
 ; Reads from this register return 0
-; Writes clear the screen if bit 0 of the written value is 1, else they do nothing
-equ rCLS, 0h
+; Writes clear the screen if bit 0 of the written value is 1 and the machine is in a CLI-based mode, else they do nothing
+equ rCLS, 5h
 
 ; RAM amount register (in bytes) (32-bit) (R) (MUST BE A POWER OF 2 (For example, 0x10000 is a valid value, but 0x300 isn't))
 ; Minimum amount: 32KB
@@ -56,6 +67,9 @@ equ putchar, 1h
 
 ; clears the screen
 equ clear_screen, 2h
+
+; sets the screen mode to the mode specified by r0 (bottom 4 bits)
+equ set_screen_mode 3h
 
 ; return the RAM size in KiB in r0
 equ get_RAM_amount_KB, 5h

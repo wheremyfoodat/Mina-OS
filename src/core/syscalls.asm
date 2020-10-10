@@ -20,7 +20,7 @@ supervisor_call_handler:
     pop r14 ; Restore r14
     ret
 
-; prints a null-terminated string
+; prints a null-terminated string if you're in a CLI-based mode
 ; params: 
 ; r0: start address of the string to print 
 section "SVCall #0: print_string" [2000h]
@@ -46,23 +46,20 @@ SVCALL_print_string:
     pop r0
     ret
 
-; prints a character
+; prints a character if you're in a CLI-based mode
 ; params: 
 ; r0: character to print (only the lowest byte is taken into account)
 section "SVCall #1: putchar" [2200h]
 SVCALL_putchar:
-    push r0
     push r1
 
     mov r1, MMIO_START
-    andi r0, r0, #FFh
-    st r0, [r1, rCHAR]
+    stb r0, [r1, rCHAR]
     
     pop r1
-    pop r0
     ret
 
-; clears the screen
+; clears the screen if you're in a CLI-based mode
 ; params: -
 section "SVCall #2: clear_screen" [2400h]
 SVCALL_clear_screen:
@@ -73,6 +70,26 @@ SVCALL_clear_screen:
     mov r1, MMIO_START
     st r0, [r1, rCLS]
     
+    pop r1
+    pop r0
+    ret
+
+; sets the screen mode
+; params: 
+; r0 - new screen mode (4 lower bits)
+section "SVCALL #3: set_screen_mode" [2600h]
+    push r0
+    push r1
+    push r2
+
+    andi r0, r0, #Fh
+    mov r1, MMIO_START
+    ld r2, [r1, rMONITOR_CNT]
+    nandi r2, r2, #Fh
+    or r2, r2, r0
+    st r2, [r1, rMONITOR_CNT]
+
+    pop r2
     pop r1
     pop r0
     ret
