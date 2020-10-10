@@ -32,7 +32,7 @@ section "boot sequence" [1000h]
 boot_sequence:
     mov r1, #0
     mov r2, #0
-    mov r15, #10007FFFh ; init the SP. TODO: Make this depend on the amount of RAM slotted
+    mov r15, #10008000h ; init the SP. TODO: Make this depend on the amount of RAM slotted
 
 .POST:
     svcall get_RAM_amount_KB
@@ -43,6 +43,13 @@ boot_sequence:
 .greet_user:
     mov r0, .hello_message    
     svcall print_string
+    ; todo: Add some waiting here
+
+.jumpToProgram:
+    ; add handling for if there's no program diskette inserted
+    mov r0, PROGRAM_MEM_START
+    rbra r0, #0
+
 
 .not_enough_ram:
     mov r0, .not_enough_ram_message
