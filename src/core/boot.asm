@@ -49,16 +49,25 @@ boot_sequence:
     mov r15, #10008000h ; init the SP. TODO: Make this depend on the amount of RAM slotted
     svcall set_screen_mode ; Set screen mode to the CLI-based mode for POST
 
+; greet user, sleep for 2 seconds
+.greet_user: 
+    mov r0, .hello_message    
+    svcall print_string
+    mov r0, #2000 
+    svcall sleep_ms
+
 .POST:
     svcall get_RAM_amount_KB
     cmp/lo r0, #64 ; Check if system has less than 64 KiB of RAM. If so, crash
     bt not_enough_ram
+
+    ; If the system has enough RAM, sleep for 2 seconds and continue POST
+    mov r0, .ram_good_message
+    svcall print_string
+    mov r0, #2000
+    svcall sleep_ms
     stop ; TODO: Add more tests
 
-.greet_user:
-    mov r0, .hello_message    
-    svcall print_string
-    ; todo: Add some waiting here
 
 .jumpToProgram:
     ; add handling for if there's no program diskette inserted
@@ -76,7 +85,10 @@ boot_sequence:
     svcall fatal_error
 
 .hello_message:
-    db "This is sir Michel Rodrique, speaking to you from the white house.\nI'll shit in your face\n", 0
+    db "This is sir Michel Rodrique, speaking to you from the white house.\nI'll shit in your face\nStarting POST...\n", 0
 
 .not_enough_ram_message:
-    db "Bruh you don't even have 64KB of RAM installed"
+    db "Bruh you don't even have 64KB of RAM installed", 0
+
+.ram_good_message:
+    db "RAM: OK\nChecking monitor state...\n"

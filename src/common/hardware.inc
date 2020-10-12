@@ -49,6 +49,13 @@ equ rCLS, 5h
 ; maximum amount: 256MB
 equ rRAM_AMOUNT, 10h
 
+; Slow, non-configurable timer (32-bit) (R)
+; Reads: Return the current timer value
+; Writes: Set the timer to the written value (Note: Writing to ANY byte of TIM0 resets the internal clock)
+; Frequency: Incremented by 1 every ms
+equ rTIM0, 40h
+equ rTIMER_SLOW, 40h
+
 ; DMA Channel 0 control register (32-bit) (W)
 ; Reads: return 0
 ; Writes: If bit 0 of the written value is 1, fires a DMA from channel 0. Else, does nothing
@@ -82,10 +89,12 @@ equ set_screen_mode 3h
 ; return the RAM size in KiB in r0
 equ get_RAM_amount_KB, 5h
 
-; copy a block of memory
+; copies a block of memory using DMA0
 equ memcpy, 6h
 
-; print null-terminated error string starting from address specified at r0
-; abort execution
+; sleep for x ms (duration is stored in r0)
+equ sleep_ms, FEh
+
+; prints a null-terminated error string starting from address specified at r0, then aborts execution
 equ fatal_error, FFh
 

@@ -101,6 +101,22 @@ section "SVCALL #6: memcpy" [2C00h]
 
     ret
 
+; sleeps for a set amount of milliseconds
+; params:
+; r0: Amount of milliseconds to sleep for
+section "SVCall #FE: sleep_ms" [21C00h]
+    mov r8, 0 ; Reset the millisecond timer to 0
+    mov r9, MMIO_START
+    st r8, [r9, rTIMER_SLOW]
+
+.sleepLoop: ; Wait till millisecond timer == amount of ms to sleep for
+    ld r8, [r9, rTIMER_SLOW]
+    cmp/eq r0, r8
+    bf .sleepLoop
+
+    ret
+    
+
 ; prints a null-terminated error string, aborts execution
 ; params:
 ; r0: start address of the error string to print

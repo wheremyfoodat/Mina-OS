@@ -28,7 +28,7 @@ invalid_state_handler:
     svcall fatal_error
 
 sigill_error_msg:
-    "SIGILL signal received because an illegal instruction has been called from a running process\n", 0
+    db "SIGILL signal received because an illegal instruction has been called from a running process\n", 0
 
 invalid_state_error_msg:
-    "SIGILL signal received because the processor has switched to an invalid state\n", 0
+    db "SIGILL signal received because the processor has switched to an invalid state\n", 0
