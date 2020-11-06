@@ -37,7 +37,6 @@ section "exception vector" [0h]
 
 .exceptionVectorExit:
     switch ; move OMCR into MCR
-    ret
 
 
 ; POST code
